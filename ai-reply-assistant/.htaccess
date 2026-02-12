@@ -1,0 +1,34 @@
+# AI Reply Assistant — web-accessible files
+#
+# osTicket's include/.htaccess blocks all direct HTTP access.
+# This override allows access to ajax.php only (needed for the
+# "Generate AI Draft" button in ticket view).
+#
+# For Nginx, add this to your server block:
+#   location ~ /include/plugins/ai-reply-assistant/ajax\.php$ {
+#       fastcgi_pass unix:/run/php/php-fpm.sock;
+#       include fastcgi_params;
+#       fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+#   }
+
+# Apache 2.4+
+<IfModule mod_authz_core.c>
+    # Block everything by default (inherit parent policy)
+    Require all denied
+
+    # Allow only ajax.php
+    <Files "ajax.php">
+        Require all granted
+    </Files>
+</IfModule>
+
+# Apache 2.2 (legacy)
+<IfModule !mod_authz_core.c>
+    Order Deny,Allow
+    Deny from all
+
+    <Files "ajax.php">
+        Order Allow,Deny
+        Allow from all
+    </Files>
+</IfModule>
