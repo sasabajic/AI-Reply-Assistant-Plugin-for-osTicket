@@ -71,10 +71,21 @@ class AiReplyPluginConfig extends PluginConfig {
                 'required'      => true,
             )),
 
+            'openai_base_url' => new TextboxField(array(
+                'label'         => 'Base URL (optional)',
+                'configuration' => array('size' => 80, 'length' => 255),
+                'hint'          => 'Leave empty for OpenAI. For other OpenAI-compatible providers enter the base URL, e.g. https://openrouter.ai/api/v1 or http://localhost:11434/v1 (without /chat/completions).',
+            )),
+
             'openai_model' => new ChoiceField(array(
                 'label'   => 'Model',
                 'default' => 'gpt-4.1-mini',
                 'choices' => array(
+                    'gpt-6-astra'   => 'gpt-6-astra — Flagship, most capable',
+                    'gpt-6.1-sol'   => 'gpt-6.1-sol — Near-flagship coding/analysis, lower cost',
+                    'gpt-6-sol'     => 'gpt-6-sol — Coding & agentic (previous)',
+                    'gpt-6.1-terra' => 'gpt-6.1-terra — Fast, efficient, visual reasoning',
+                    'gpt-6-luna'    => 'gpt-6-luna — Most efficient, cost-sensitive',
                     'gpt-4.1-mini'  => 'gpt-4.1-mini — Fast & affordable (recommended)',
                     'gpt-4.1-nano'  => 'gpt-4.1-nano — Fastest, cheapest',
                     'gpt-4.1'       => 'gpt-4.1 — Highest quality',
@@ -95,14 +106,25 @@ class AiReplyPluginConfig extends PluginConfig {
                 'label'         => 'Max Tokens',
                 'default'       => '1024',
                 'configuration' => array('size' => 10),
-                'hint'          => 'Maximum response tokens (100–4096).',
+                'hint'          => 'Maximum response tokens (100–32768). Reasoning models count reasoning tokens too, so use a generous value.',
+            )),
+
+            'openai_token_param' => new ChoiceField(array(
+                'label'   => 'Token Limit Parameter',
+                'default' => 'auto',
+                'choices' => array(
+                    'auto'                  => 'Auto (max_completion_tokens for OpenAI, max_tokens for custom Base URL)',
+                    'max_completion_tokens' => 'max_completion_tokens',
+                    'max_tokens'            => 'max_tokens (legacy / some compatible providers)',
+                ),
+                'hint' => 'OpenAI deprecated max_tokens. Change only if your custom provider rejects the default.',
             )),
 
             'openai_temperature' => new TextboxField(array(
                 'label'         => 'Temperature',
-                'default'       => '0.3',
+                'default'       => '',
                 'configuration' => array('size' => 10),
-                'hint'          => 'Controls randomness (0.0 = deterministic, 2.0 = very creative). Recommended: 0.3.',
+                'hint'          => 'Controls randomness (0.0–2.0, e.g. 0.3). Leave EMPTY (default) for reasoning/GPT-5+/GPT-6 models that reject custom temperature.',
             )),
 
             'openai_timeout' => new TextboxField(array(
@@ -275,9 +297,16 @@ class AiReplyPluginConfig extends PluginConfig {
             return false;
         }
 
+        // Validate base URL
+        $baseUrl = trim((string) ($config['openai_base_url'] ?? ''));
+        if ($baseUrl !== '' && !preg_match('#^https?://[^\s/]+#i', $baseUrl)) {
+            $errors['err'] = 'Base URL must start with http:// or https://.';
+            return false;
+        }
+
         // Validate numeric fields
         $numericFields = array(
-            'openai_max_tokens'             => array(100, 4096, 'Max Tokens'),
+            'openai_max_tokens'             => array(100, 32768, 'Max Tokens'),
             'openai_timeout'                => array(5, 60, 'Timeout'),
             'openai_retry_count'            => array(0, 3, 'Retry Count'),
             'context_message_count'         => array(1, 20, 'Message History Count'),
@@ -297,8 +326,9 @@ class AiReplyPluginConfig extends PluginConfig {
         }
 
         // Validate temperature
-        $temp = (float) ($config['openai_temperature'] ?? 0.3);
-        if ($temp < 0.0 || $temp > 2.0) {
+        $tempRaw = trim((string) ($config['openai_temperature'] ?? ''));
+        $temp = (float) $tempRaw;
+        if ($tempRaw !== '' && ($temp < 0.0 || $temp > 2.0)) {
             $errors['err'] = 'Temperature must be between 0.0 and 2.0.';
             return false;
         }

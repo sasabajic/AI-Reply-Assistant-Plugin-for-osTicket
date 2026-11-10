@@ -52,7 +52,7 @@ $authHeader = 'Bearer ' . $config->get('openai_api_key');
 ```json
 {
   "model": "gpt-4.1-mini",
-  "max_tokens": 1024,
+  "max_completion_tokens": 1024,
   "temperature": 0.3,
   "response_format": { "type": "json_object" },
   "messages": [

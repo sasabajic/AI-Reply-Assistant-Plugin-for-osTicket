@@ -17,8 +17,8 @@
 
 class AiReplyOpenAiClient {
 
-    /** API endpoint */
-    const API_URL = 'https://api.openai.com/v1/chat/completions';
+    /** Default base URL (OpenAI) */
+    const DEFAULT_BASE_URL = 'https://api.openai.com/v1';
 
     /** Max retry attempts */
     const MAX_RETRIES = 2;
@@ -31,6 +31,9 @@ class AiReplyOpenAiClient {
 
     /** @var PluginConfig */
     private $config;
+
+    /** @var string Resolved chat completions endpoint */
+    private $endpoint = '';
 
     /**
      * @param PluginConfig $config
@@ -66,14 +69,25 @@ class AiReplyOpenAiClient {
         error_log('[AI Reply Assistant] API key length: ' . strlen($apiKey)
             . ', starts with: ' . substr($apiKey, 0, 8) . '...');
 
-        $temperature = (float) ($this->config->get('openai_temperature') ?: 0.3);
+        $baseUrl     = $this->getBaseUrl();
+        $isOpenAi    = ($baseUrl === self::DEFAULT_BASE_URL);
+        $this->endpoint = $baseUrl . '/chat/completions';
+
+        $tempRaw     = trim((string) $this->config->get('openai_temperature'));
         $maxTokens   = (int) ($this->config->get('openai_max_tokens') ?: 1500);
         $timeout      = (int) ($this->config->get('openai_timeout') ?: 30);
 
         // Clamp values
-        $temperature = max(0.0, min(2.0, $temperature));
-        $maxTokens   = max(100, min(4096, $maxTokens));
+        $maxTokens   = max(100, min(32768, $maxTokens));
         $timeout      = max(10, min(120, $timeout));
+
+        // Token limit parameter name: OpenAI deprecated max_tokens in favour of
+        // max_completion_tokens (required by newer models). Many third-party
+        // OpenAI-compatible providers still only understand max_tokens.
+        $tokenParam = $this->config->get('openai_token_param') ?: 'auto';
+        if ($tokenParam === 'auto') {
+            $tokenParam = $isOpenAi ? 'max_completion_tokens' : 'max_tokens';
+        }
 
         $payload = array(
             'model'           => $model,
@@ -81,10 +95,15 @@ class AiReplyOpenAiClient {
                 array('role' => 'system',  'content' => $systemPrompt),
                 array('role' => 'user',    'content' => $userMessage),
             ),
-            'temperature'     => $temperature,
-            'max_tokens'      => $maxTokens,
+            $tokenParam       => $maxTokens,
             'response_format' => array('type' => 'json_object'),
         );
+
+        // Temperature: leave empty to omit (reasoning models only accept the
+        // default value and reject any explicit temperature).
+        if ($tempRaw !== '') {
+            $payload['temperature'] = max(0.0, min(2.0, (float) $tempRaw));
+        }
 
         $jsonPayload = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($jsonPayload === false) {
@@ -144,6 +163,23 @@ class AiReplyOpenAiClient {
     }
 
     /**
+     * Resolve the API base URL (no trailing slash, no /chat/completions).
+     * Falls back to OpenAI when unset or not a valid http(s) URL.
+     *
+     * @return string
+     */
+    private function getBaseUrl() {
+        $url = trim((string) $this->config->get('openai_base_url'));
+        if ($url === '' || !preg_match('#^https?://#i', $url)) {
+            return self::DEFAULT_BASE_URL;
+        }
+        $url = rtrim($url, '/');
+        // Tolerate users pasting the full endpoint
+        $url = preg_replace('#/chat/completions$#i', '', $url);
+        return $url;
+    }
+
+    /**
      * Execute the curl request.
      *
      * @param  string $jsonPayload
@@ -155,7 +191,7 @@ class AiReplyOpenAiClient {
         $ch = curl_init();
 
         curl_setopt_array($ch, array(
-            CURLOPT_URL            => self::API_URL,
+            CURLOPT_URL            => $this->endpoint,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => $jsonPayload,
             CURLOPT_HTTPHEADER     => $headers,
