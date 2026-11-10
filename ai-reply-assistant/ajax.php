@@ -74,6 +74,8 @@ if (!$config) {
     )));
 }
 
+AiReplyLogger::setLevel($config->get('log_level'));
+
 // ── Run AI pipeline ─────────────────────────────────────────────────────
 $router = new AiReplyEventRouter($config);
 $result = $router->triggerForTicket($ticket);

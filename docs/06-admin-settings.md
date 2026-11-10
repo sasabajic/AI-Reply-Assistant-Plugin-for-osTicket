@@ -60,7 +60,7 @@ dynamically populate from osTicket's current configuration.
 |-------|------|-----|---------|-------------|
 | Message History Count | number | `context_message_count` | `6` | Last N messages to include (1–20) |
 | Max Message Length | number | `max_message_length` | `2000` | Truncate each message to N chars |
-| Response Language | text | `response_language` | `Serbian (ekavica, Latin script)` | Language instruction for AI model |
+| Response Language | text | `response_language` | *(empty)* | Empty = reply in the customer's language; otherwise forces the given language |
 | Mini Knowledge Base | textarea | `mini_kb_content` | (empty) | Static FAQ content (max 4000 chars) |
 | Use osTicket KB | checkbox | `use_osticket_kb` | `false` | Search osTicket's built-in KB |
 | Use Canned Responses | checkbox | `use_canned_responses` | `true` | Search osTicket's Canned Responses |
@@ -203,7 +203,7 @@ static function getStatusChoices() {
 │  ── Context & Prompt ─────────────────────────────────  │
 │  Message History Count: [6   ]                          │
 │  Max Message Length: [2000  ]                            │
-│  Response Language: [Serbian (ekavica, Latin script)  ]  │
+│  Response Language: [                               ]  │
 │  Mini Knowledge Base:                                   │
 │  [                                                   ]  │
 │  [  (paste FAQ content here, max 4000 chars)         ]  │

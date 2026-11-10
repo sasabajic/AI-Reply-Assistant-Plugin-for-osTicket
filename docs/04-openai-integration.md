@@ -52,7 +52,7 @@ $authHeader = 'Bearer ' . $config->get('openai_api_key');
 ```json
 {
   "model": "gpt-4.1-mini",
-  "max_tokens": 1024,
+  "max_completion_tokens": 1024,
   "temperature": 0.3,
   "response_format": { "type": "json_object" },
   "messages": [
@@ -113,13 +113,14 @@ The response language is a **configurable admin setting**:
 
 ```
 Setting: response_language
-Default: "Serbian (ekavica, Latin script)"
+Default: "" (empty = same language as the customer's latest message)
 Type: free text — admin can type any language instruction
 ```
 
-The system prompt template uses this value:
+The system prompt rule depends on the setting:
 ```
-1. Respond ONLY in {response_language}.
+Set:   1. Respond ONLY in {response_language}, regardless of the language the customer used.
+Empty: 1. Respond in the same language the customer used in their most recent message.
 ```
 
 This allows multi-language deployments (English, German, etc.) with zero code changes.

@@ -87,16 +87,30 @@ class AiReplyEventRouter {
 
             // ── Create standalone "AI Draft" button for the top action bar ──
             function injectAiButton() {
-                // Skip if already injected
-                if ($(".ai-reply-btn-standalone").length) {
-                    console.log("[AI Reply Assistant] Button already exists, skipping");
+                // The server-rendered "More" menu item exists only on a real ticket
+                // view. If it is missing (e.g. PJAX navigated to the ticket list),
+                // remove any leftover standalone button and stop.
+                var $item = $("a.ai-reply-generate").not(".ai-reply-btn-standalone").first();
+                if (!$item.length) {
+                    $(".ai-reply-btn-standalone").remove();
                     return;
+                }
+                var ticketId = $item.attr("data-ticket-id");
+
+                // Skip if already injected for this same ticket; replace if stale
+                var $existing = $(".ai-reply-btn-standalone");
+                if ($existing.length) {
+                    if ($existing.attr("data-ticket-id") === ticketId) {
+                        console.log("[AI Reply Assistant] Button already exists, skipping");
+                        return;
+                    }
+                    $existing.remove();
                 }
 
                 var $aiBtn = $("<a/>", {
                     "href": "#",
                     "class": "action-button pull-right ai-reply-btn-standalone ai-reply-generate",
-                    "data-ticket-id": ' . $ticketId . ',
+                    "data-ticket-id": ticketId,
                     "data-placement": "bottom",
                     "data-toggle": "tooltip",
                     "title": "Generate AI Draft Reply"
@@ -162,7 +176,7 @@ class AiReplyEventRouter {
                 var $btn = $(this);
                 if ($btn.hasClass("disabled")) return;
 
-                var tid = $btn.data("ticket-id");
+                var tid = $btn.attr("data-ticket-id");
                 var origHtml = $btn.html();
 
                 $btn.addClass("disabled")
@@ -212,7 +226,7 @@ class AiReplyEventRouter {
             });
 
             // Also run on PJAX completion (osTicket uses PJAX for navigation)
-            $(document).on("pjax:end", function() {
+            $(document).off("pjax:end.aireply").on("pjax:end.aireply", function() {
                 injectAiButton();
             });
 
@@ -518,10 +532,7 @@ class AiReplyEventRouter {
      * @return void
      */
     private function logDebug($ticket, $message) {
-        if ($this->config->get('log_level') !== 'debug') {
-            return;
-        }
-        error_log('[AI Reply Assistant] [DEBUG] Ticket #'
+        AiReplyLogger::debug('Ticket #'
             . ($ticket ? $ticket->getNumber() : '?') . ': ' . $message);
     }
 
@@ -532,10 +543,6 @@ class AiReplyEventRouter {
      * @return void
      */
     private function logError($message) {
-        $level = $this->config->get('log_level');
-        if ($level === 'off') {
-            return;
-        }
-        error_log('[AI Reply Assistant] [ERROR] ' . $message);
+        AiReplyLogger::error($message);
     }
 }
