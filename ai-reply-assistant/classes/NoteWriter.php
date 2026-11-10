@@ -60,13 +60,13 @@ class AiReplyNoteWriter {
 
             // Log error if note creation failed
             if (!empty($errors)) {
-                error_log('[AI Reply Assistant] Failed to post note: ' . implode(', ', $errors));
+                AiReplyLogger::error('Failed to post note: ' . implode(', ', $errors));
             }
 
             return null;
 
         } catch (\Exception $e) {
-            error_log('[AI Reply Assistant] NoteWriter exception: ' . $e->getMessage());
+            AiReplyLogger::error('NoteWriter exception: ' . $e->getMessage());
             return null;
         }
     }

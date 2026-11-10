@@ -134,7 +134,7 @@ class AiReplyLogWriter {
             return ($result !== false);
 
         } catch (\Exception $e) {
-            error_log('[AI Reply Assistant] LogWriter insert error: ' . $e->getMessage());
+            AiReplyLogger::error('LogWriter insert error: ' . $e->getMessage());
             return false;
         }
     }

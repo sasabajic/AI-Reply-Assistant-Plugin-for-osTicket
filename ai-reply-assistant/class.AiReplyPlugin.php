@@ -14,6 +14,7 @@
  */
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/classes/Logger.php';
 require_once __DIR__ . '/classes/EventRouter.php';
 require_once __DIR__ . '/classes/GatingLogic.php';
 require_once __DIR__ . '/classes/PiiRedactor.php';
@@ -50,21 +51,15 @@ class AiReplyPlugin extends Plugin {
      * @return void
      */
     function bootstrap() {
-        // Debug: log that plugin is being loaded
-        error_log('[AI Reply Assistant] bootstrap() called');
-
         // Only run if plugin is enabled
         $config = $this->getConfig();
         if (!$config) {
-            error_log('[AI Reply Assistant] bootstrap() - no config found, aborting');
             return;
         }
+        AiReplyLogger::setLevel($config->get('log_level'));
         if (!$config->get('enabled')) {
-            error_log('[AI Reply Assistant] bootstrap() - plugin is disabled in config');
             return;
         }
-
-        error_log('[AI Reply Assistant] bootstrap() - plugin enabled, registering handlers');
 
         // Ensure log table exists (safe to call on every load — checks first)
         $this->ensureDbTable();
@@ -119,7 +114,7 @@ class AiReplyPlugin extends Plugin {
             );
         });
 
-        error_log('[AI Reply Assistant] bootstrap() - all handlers registered OK');
+        AiReplyLogger::debug('bootstrap: handlers registered');
     }
 
     /**
@@ -156,7 +151,7 @@ class AiReplyPlugin extends Plugin {
                 return new AiReplyPluginConfig((int) $row['id']);
             }
         } catch (\Exception $e) {
-            error_log('[AI Reply Assistant] getActiveConfig error: ' . $e->getMessage());
+            AiReplyLogger::error('getActiveConfig: ' . $e->getMessage());
         }
 
         return null;

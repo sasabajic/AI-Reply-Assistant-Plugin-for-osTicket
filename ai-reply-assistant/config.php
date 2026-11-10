@@ -48,13 +48,13 @@ class AiReplyPluginConfig extends PluginConfig {
 
             'log_level' => new ChoiceField(array(
                 'label'   => 'Log Level',
-                'default' => 'error',
+                'default' => 'off',
                 'choices' => array(
                     'off'   => 'OFF — No logging',
                     'error' => 'ERROR — Errors only',
                     'debug' => 'DEBUG — Verbose (for troubleshooting)',
                 ),
-                'hint' => 'Controls how much detail is written to the AI log table.',
+                'hint' => 'Controls what the plugin writes to the PHP error log. Keep OFF unless troubleshooting.',
             )),
 
             // ── Group 2: OpenAI Connection ────────────────────────────

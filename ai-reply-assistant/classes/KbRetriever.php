@@ -248,7 +248,7 @@ class AiReplyKbRetriever {
             return $results;
 
         } catch (\Exception $e) {
-            error_log('[AI Reply Assistant] FAQ search error: ' . $e->getMessage());
+            AiReplyLogger::error('FAQ search error: ' . $e->getMessage());
             return array();
         }
     }
@@ -336,7 +336,7 @@ class AiReplyKbRetriever {
             return $results;
 
         } catch (\Exception $e) {
-            error_log('[AI Reply Assistant] Canned response search error: ' . $e->getMessage());
+            AiReplyLogger::error('Canned response search error: ' . $e->getMessage());
             return array();
         }
     }

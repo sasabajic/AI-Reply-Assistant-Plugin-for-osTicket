@@ -532,10 +532,7 @@ class AiReplyEventRouter {
      * @return void
      */
     private function logDebug($ticket, $message) {
-        if ($this->config->get('log_level') !== 'debug') {
-            return;
-        }
-        error_log('[AI Reply Assistant] [DEBUG] Ticket #'
+        AiReplyLogger::debug('Ticket #'
             . ($ticket ? $ticket->getNumber() : '?') . ': ' . $message);
     }
 
@@ -546,10 +543,6 @@ class AiReplyEventRouter {
      * @return void
      */
     private function logError($message) {
-        $level = $this->config->get('log_level');
-        if ($level === 'off') {
-            return;
-        }
-        error_log('[AI Reply Assistant] [ERROR] ' . $message);
+        AiReplyLogger::error($message);
     }
 }

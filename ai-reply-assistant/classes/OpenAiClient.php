@@ -65,10 +65,6 @@ class AiReplyOpenAiClient {
             return $this->errorResult('OpenAI API key is not configured.', 0);
         }
 
-        // Debug: log key length and prefix (never log the full key)
-        error_log('[AI Reply Assistant] API key length: ' . strlen($apiKey)
-            . ', starts with: ' . substr($apiKey, 0, 8) . '...');
-
         $baseUrl     = $this->getBaseUrl();
         $isOpenAi    = ($baseUrl === self::DEFAULT_BASE_URL);
         $this->endpoint = $baseUrl . '/chat/completions';
