@@ -45,7 +45,7 @@ using OpenAI, posted as Internal Notes for agent review.
 | Rate limiting | DB-based via log table | Simple, no Redis needed |
 | KB approach | Mini-KB + osTicket KB + Canned Responses | All three sources combined |
 | API endpoint | Direct OpenAI only | No proxy layer |
-| Response language | Configurable (default Serbian) | Admin sets in settings |
+| Response language | Configurable (default: empty = language of the customer's message) | Admin may override in settings |
 | Plugin config storage | osTicket PluginConfig | Standard, no custom UI |
 
 ---

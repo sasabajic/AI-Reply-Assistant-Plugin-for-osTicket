@@ -211,9 +211,9 @@ class AiReplyPluginConfig extends PluginConfig {
 
             'response_language' => new TextboxField(array(
                 'label'         => 'Response Language',
-                'default'       => 'Serbian (ekavica, Latin script)',
+                'default'       => '',
                 'configuration' => array('size' => 60),
-                'hint'          => 'Language instruction for the AI model (e.g., "English", "German", "Serbian (ekavica, Latin script)").',
+                'hint'          => 'Leave empty to reply in the language of the customer\'s message. To force a language, enter it here (e.g., "English", "German", "Serbian (ekavica, Latin script)").',
             )),
 
             'mini_kb_content' => new TextareaField(array(

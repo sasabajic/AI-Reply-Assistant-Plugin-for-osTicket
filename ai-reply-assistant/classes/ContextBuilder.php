@@ -62,7 +62,13 @@ class AiReplyContextBuilder {
      * @return string
      */
     private function buildSystemPrompt(array $gatingResult) {
-        $language = $this->config->get('response_language') ?: 'Serbian (ekavica, Latin script)';
+        $language = trim((string) $this->config->get('response_language'));
+        if ($language !== '') {
+            $languageRule = "Respond ONLY in {$language}, regardless of the language the customer used.";
+        } else {
+            $languageRule = "Respond in the same language the customer used in their most recent message "
+                . "(the text they sent to support). Do not switch to another language.";
+        }
 
         $sensitiveWarning = '';
         if (!empty($gatingResult['sensitive_data_found'])) {
@@ -75,7 +81,7 @@ class AiReplyContextBuilder {
 You are an L1 support agent assistant for a helpdesk system.
 
 RULES:
-1. Respond ONLY in {$language}.
+1. {$languageRule}
 2. Use ONLY the information provided in the ticket context and knowledge base below.
 3. Do NOT invent information, URLs, phone numbers, or procedures not present in the context.
 4. NEVER ask the customer for passwords, credit card numbers, JMBG, or other sensitive personal data.
